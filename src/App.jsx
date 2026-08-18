@@ -3,23 +3,25 @@ import useLocalStorage from './hooks/useLocalStorage';
 import defaultCategories from './data/defaultCategories';
 import TransactionForm from './components/TransactionForm';
 import TransactionList from './components/TransactionList';
+import SummaryCards from './components/SummaryCards';
+import CategoryBreakdownChart from './components/CategoryBreakdownChart';
 
 function App() {
-  // TODO 1: Custom hook useLocalStorage (Data persist otomatis!)
+  // 1. Custom hook useLocalStorage untuk simpan transaksi & kategori
   const [transactions, setTransactions] = useLocalStorage('budgetwise_transactions', []);
   const [categories] = useLocalStorage('budgetwise_categories', defaultCategories);
 
-  // TODO 2: Handler Tambah Transaksi (item baru ditaruh di awal array)
+  // 2. Handler Tambah Transaksi (transaksi baru di awal array)
   const handleAddTransaction = (newTransaction) => {
     setTransactions((prev) => [newTransaction, ...prev]);
   };
 
-  // TODO 3: Handler Hapus Transaksi by ID
+  // 3. Handler Hapus Transaksi by ID
   const handleDeleteTransaction = (id) => {
     setTransactions((prev) => prev.filter((trx) => trx.id !== id));
   };
 
-  // Quick stats kalkulasi sederhana untuk header
+  // Quick stats kalkulasi saldo total untuk header
   const totalIncome = transactions
     .filter((t) => t.type === 'income')
     .reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
@@ -67,9 +69,22 @@ function App() {
           </div>
         </header>
 
-        {/* TODO 4: RENDER KOMPONEN UTAMA */}
+        {/* MAIN DASHBOARD CONTENT */}
         <main className="space-y-6">
-          {/* Form Input Transaksi */}
+          {/* 1. Ringkasan Kartu: Saldo, Pemasukan, Pengeluaran */}
+          <section>
+            <SummaryCards transactions={transactions} />
+          </section>
+
+          {/* 2. Visualisasi Grafik Distribusi Pengeluaran (Pie Chart) */}
+          <section>
+            <CategoryBreakdownChart
+              transactions={transactions}
+              categories={categories}
+            />
+          </section>
+
+          {/* 3. Form Input Transaksi (React Hook Form + Zod) */}
           <section>
             <TransactionForm
               categories={categories}
@@ -77,7 +92,7 @@ function App() {
             />
           </section>
 
-          {/* List Riwayat Transaksi */}
+          {/* 4. List Riwayat Transaksi */}
           <section>
             <TransactionList
               transactions={transactions}
