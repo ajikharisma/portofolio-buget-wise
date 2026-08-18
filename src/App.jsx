@@ -1,27 +1,38 @@
 import React from 'react';
 import useLocalStorage from './hooks/useLocalStorage';
 import defaultCategories from './data/defaultCategories';
-import TransactionForm from './components/TransactionForm';
-import TransactionList from './components/TransactionList';
 import SummaryCards from './components/SummaryCards';
+import BudgetProgress from './components/BudgetProgress';
+import TransactionForm from './components/TransactionForm';
 import CategoryBreakdownChart from './components/CategoryBreakdownChart';
+import MonthlyTrendChart from './components/MonthlyTrendChart';
+import TransactionList from './components/TransactionList';
+
+// Limit budget default per kategori
+const initialBudgetLimits = [
+  { categoryId: 'makan', limit: 1500000 },
+  { categoryId: 'transport', limit: 500000 },
+  { categoryId: 'hiburan', limit: 400000 },
+  { categoryId: 'belanja', limit: 800000 },
+];
 
 function App() {
-  // 1. Custom hook useLocalStorage untuk simpan transaksi & kategori
+  // 1. Data persisten via useLocalStorage
   const [transactions, setTransactions] = useLocalStorage('budgetwise_transactions', []);
   const [categories] = useLocalStorage('budgetwise_categories', defaultCategories);
+  const [budgetLimits] = useLocalStorage('budgetwise_limits', initialBudgetLimits);
 
-  // 2. Handler Tambah Transaksi (transaksi baru di awal array)
+  // 2. Handler Tambah Transaksi
   const handleAddTransaction = (newTransaction) => {
     setTransactions((prev) => [newTransaction, ...prev]);
   };
 
-  // 3. Handler Hapus Transaksi by ID
+  // 3. Handler Hapus Transaksi
   const handleDeleteTransaction = (id) => {
     setTransactions((prev) => prev.filter((trx) => trx.id !== id));
   };
 
-  // Quick stats kalkulasi saldo total untuk header
+  // Kalkulasi total saldo
   const totalIncome = transactions
     .filter((t) => t.type === 'income')
     .reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
@@ -76,11 +87,12 @@ function App() {
             <SummaryCards transactions={transactions} />
           </section>
 
-          {/* 2. Visualisasi Grafik Distribusi Pengeluaran (Pie Chart) */}
+          {/* 2. Target Anggaran (Budget Limit Progress) */}
           <section>
-            <CategoryBreakdownChart
+            <BudgetProgress
               transactions={transactions}
               categories={categories}
+              budgetLimits={budgetLimits}
             />
           </section>
 
@@ -92,7 +104,20 @@ function App() {
             />
           </section>
 
-          {/* 4. List Riwayat Transaksi */}
+          {/* 4. Visualisasi Grafik Distribusi Pengeluaran (Pie Chart) */}
+          <section>
+            <CategoryBreakdownChart
+              transactions={transactions}
+              categories={categories}
+            />
+          </section>
+
+          {/* 5. Visualisasi Grafik Tren Bulanan (Bar Chart) */}
+          <section>
+            <MonthlyTrendChart transactions={transactions} />
+          </section>
+
+          {/* 6. List Riwayat Transaksi */}
           <section>
             <TransactionList
               transactions={transactions}
